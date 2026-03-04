@@ -14,22 +14,31 @@ function flushCandidates(peerId, pc) {
   pendingCandidates.delete(peerId);
 }
 
-let cachedIceServers = null;
+const TURN_USER = import.meta.env.VITE_TURN_USERNAME;
+const TURN_PASS = import.meta.env.VITE_TURN_CREDENTIAL;
 
-async function getIceServers() {
-  if (cachedIceServers) return cachedIceServers;
-  try {
-    const resp = await fetch("/api/turn-credentials");
-    cachedIceServers = await resp.json();
-  } catch {
-    cachedIceServers = [{ urls: "stun:stun.l.google.com:19302" }];
-  }
-  return cachedIceServers;
-}
+const ICE_SERVERS = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun.relay.metered.ca:80" },
+  {
+    urls: "turn:global.relay.metered.ca:80",
+    username: TURN_USER,
+    credential: TURN_PASS,
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443",
+    username: TURN_USER,
+    credential: TURN_PASS,
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443?transport=tcp",
+    username: TURN_USER,
+    credential: TURN_PASS,
+  },
+];
 
-export async function createPeer({ peerId, socket, localStream, pcsRef }) {
-  const iceServers = await getIceServers();
-  const pc = new RTCPeerConnection({ iceServers });
+export function createPeer({ peerId, socket, localStream, pcsRef }) {
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
@@ -60,7 +69,7 @@ export async function createPeer({ peerId, socket, localStream, pcsRef }) {
 
 export async function startCall({ peerId, socket, localStream, pcsRef }) {
   console.log(`[webrtc] starting call with ${peerId}`);
-  const pc = await createPeer({ peerId, socket, localStream, pcsRef });
+  const pc = createPeer({ peerId, socket, localStream, pcsRef });
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   socket.send(
@@ -81,7 +90,7 @@ export async function handleSignal({
 }) {
   if (data.kind === "offer") {
     console.log(`[webrtc] got offer from ${from}`);
-    const pc = await createPeer({ peerId: from, socket, localStream, pcsRef });
+    const pc = createPeer({ peerId: from, socket, localStream, pcsRef });
     await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
     flushCandidates(from, pc);
     const answer = await pc.createAnswer();

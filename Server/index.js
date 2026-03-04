@@ -18,24 +18,7 @@ const MIME = {
   ".ico": "image/x-icon",
 };
 
-const METERED_API_KEY = process.env.METERED_API_KEY || "ed68bec8d71ffb9b1884b310717b99955667";
-
-const server = createServer(async (req, res) => {
-  if (req.url === "/api/turn-credentials") {
-    try {
-      const resp = await fetch(
-        `https://webrtcvc.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`,
-      );
-      const creds = await resp.json();
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(creds));
-    } catch {
-      res.writeHead(502);
-      res.end("Failed to fetch TURN credentials");
-    }
-    return;
-  }
-
+const server = createServer((req, res) => {
   let filePath = join(DIST, req.url === "/" ? "index.html" : req.url);
 
   if (!existsSync(filePath)) {

@@ -6,3 +6,7 @@ services:
     envVars:
       - key: PORT
         value: "10000"
+      - key: VITE_TURN_USERNAME
+        sync: false
+      - key: VITE_TURN_CREDENTIAL
+        sync: false
