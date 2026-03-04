@@ -18,25 +18,24 @@ const TURN_USER = import.meta.env.VITE_TURN_USERNAME;
 const TURN_PASS = import.meta.env.VITE_TURN_CREDENTIAL;
 
 const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:webrtcvc.metered.live:80" },
+  { urls: "stun:stun.relay.metered.ca:80" },
   {
-    urls: "turn:webrtcvc.metered.live:80",
+    urls: "turn:global.relay.metered.ca:80",
     username: TURN_USER,
     credential: TURN_PASS,
   },
   {
-    urls: "turn:webrtcvc.metered.live:80?transport=tcp",
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
     username: TURN_USER,
     credential: TURN_PASS,
   },
   {
-    urls: "turn:webrtcvc.metered.live:443",
+    urls: "turn:global.relay.metered.ca:443",
     username: TURN_USER,
     credential: TURN_PASS,
   },
   {
-    urls: "turns:webrtcvc.metered.live:443",
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
     username: TURN_USER,
     credential: TURN_PASS,
   },
