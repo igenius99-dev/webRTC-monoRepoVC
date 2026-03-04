@@ -61,6 +61,7 @@ export async function join(
         localStream: localStreamRef.current,
         pcsRef,
       });
+      console.log("hey");
     }
   };
 
@@ -80,6 +81,7 @@ export function leave(wsRef, localStreamRef, pcsRef) {
     closePeer(peerId, pcsRef);
     removeRemoteAudio(peerId);
   }
+
   if (localStreamRef.current) {
     localStreamRef.current.getTracks().forEach((t) => t.stop());
     localStreamRef.current = null;
