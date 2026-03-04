@@ -10,15 +10,32 @@ const PORT = process.env.PORT || 3001;
 
 const MIME = {
   ".html": "text/html",
-  ".js":   "application/javascript",
-  ".css":  "text/css",
+  ".js": "application/javascript",
+  ".css": "text/css",
   ".json": "application/json",
-  ".svg":  "image/svg+xml",
-  ".png":  "image/png",
-  ".ico":  "image/x-icon",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
 };
 
-const server = createServer((req, res) => {
+const METERED_API_KEY = process.env.METERED_API_KEY || "ed68bec8d71ffb9b1884b310717b99955667";
+
+const server = createServer(async (req, res) => {
+  if (req.url === "/api/turn-credentials") {
+    try {
+      const resp = await fetch(
+        `https://webrtcvc.metered.live/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`,
+      );
+      const creds = await resp.json();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(creds));
+    } catch {
+      res.writeHead(502);
+      res.end("Failed to fetch TURN credentials");
+    }
+    return;
+  }
+
   let filePath = join(DIST, req.url === "/" ? "index.html" : req.url);
 
   if (!existsSync(filePath)) {
@@ -28,7 +45,9 @@ const server = createServer((req, res) => {
   try {
     const data = readFileSync(filePath);
     const ext = extname(filePath);
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": MIME[ext] || "application/octet-stream",
+    });
     res.end(data);
   } catch {
     res.writeHead(404);

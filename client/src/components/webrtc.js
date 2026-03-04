@@ -5,35 +5,31 @@ const pendingCandidates = new Map();
 function flushCandidates(peerId, pc) {
   const queued = pendingCandidates.get(peerId);
   if (!queued || queued.length === 0) return;
-  console.log(`[webrtc] flushing ${queued.length} buffered ICE candidates for ${peerId}`);
+  console.log(
+    `[webrtc] flushing ${queued.length} buffered ICE candidates for ${peerId}`,
+  );
   for (const c of queued) {
     pc.addIceCandidate(new RTCIceCandidate(c)).catch(() => {});
   }
   pendingCandidates.delete(peerId);
 }
 
-const ICE_SERVERS = [
-  { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun.relay.metered.ca:80" },
-  {
-    urls: "turn:global.relay.metered.ca:80",
-    username: "e03b0de978a9de297e011a1b",
-    credential: "3ZpGqGsqMIhSwnZb",
-  },
-  {
-    urls: "turn:global.relay.metered.ca:443",
-    username: "e03b0de978a9de297e011a1b",
-    credential: "3ZpGqGsqMIhSwnZb",
-  },
-  {
-    urls: "turn:global.relay.metered.ca:443?transport=tcp",
-    username: "e03b0de978a9de297e011a1b",
-    credential: "3ZpGqGsqMIhSwnZb",
-  },
-];
+let cachedIceServers = null;
 
-export function createPeer({ peerId, socket, localStream, pcsRef }) {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+async function getIceServers() {
+  if (cachedIceServers) return cachedIceServers;
+  try {
+    const resp = await fetch("/api/turn-credentials");
+    cachedIceServers = await resp.json();
+  } catch {
+    cachedIceServers = [{ urls: "stun:stun.l.google.com:19302" }];
+  }
+  return cachedIceServers;
+}
+
+export async function createPeer({ peerId, socket, localStream, pcsRef }) {
+  const iceServers = await getIceServers();
+  const pc = new RTCPeerConnection({ iceServers });
 
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
@@ -64,7 +60,7 @@ export function createPeer({ peerId, socket, localStream, pcsRef }) {
 
 export async function startCall({ peerId, socket, localStream, pcsRef }) {
   console.log(`[webrtc] starting call with ${peerId}`);
-  const pc = createPeer({ peerId, socket, localStream, pcsRef });
+  const pc = await createPeer({ peerId, socket, localStream, pcsRef });
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   socket.send(
@@ -76,10 +72,16 @@ export async function startCall({ peerId, socket, localStream, pcsRef }) {
   );
 }
 
-export async function handleSignal({ from, data, socket, localStream, pcsRef }) {
+export async function handleSignal({
+  from,
+  data,
+  socket,
+  localStream,
+  pcsRef,
+}) {
   if (data.kind === "offer") {
     console.log(`[webrtc] got offer from ${from}`);
-    const pc = createPeer({ peerId: from, socket, localStream, pcsRef });
+    const pc = await createPeer({ peerId: from, socket, localStream, pcsRef });
     await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
     flushCandidates(from, pc);
     const answer = await pc.createAnswer();
@@ -99,7 +101,9 @@ export async function handleSignal({ from, data, socket, localStream, pcsRef }) 
     if (!pc || !pc.remoteDescription) {
       if (!pendingCandidates.has(from)) pendingCandidates.set(from, []);
       pendingCandidates.get(from).push(data.candidate);
-      console.log(`[webrtc] buffered ICE candidate from ${from} (total: ${pendingCandidates.get(from).length})`);
+      console.log(
+        `[webrtc] buffered ICE candidate from ${from} (total: ${pendingCandidates.get(from).length})`,
+      );
       return;
     }
     await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
