@@ -21,7 +21,13 @@ export async function join(
 
   socket.onopen = () => setJoined(true);
 
-  socket.onmessage = async (event) => {
+  let queue = Promise.resolve();
+
+  socket.onmessage = (event) => {
+    queue = queue.then(() => handleMessage(event));
+  };
+
+  async function handleMessage(event) {
     const msg = JSON.parse(event.data);
 
     if (msg.type === "Welcome") {
@@ -61,9 +67,8 @@ export async function join(
         localStream: localStreamRef.current,
         pcsRef,
       });
-      console.log("hey");
     }
-  };
+  }
 
   socket.onclose = () => {
     setJoined(false);
