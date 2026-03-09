@@ -51,7 +51,7 @@ function App() {
             <div>Real Name: {name}</div>
           </div>
 
-          <input type="text" onChage=""></input>
+          <input type="text" onChagne={(e) => setName(e.target.value)}></input>
           <div className="peer-list">
             <h3>Peers ({peerName.length})</h3>
             {peerName.length === 0 ? (
