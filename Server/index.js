@@ -101,8 +101,10 @@ wss.on("connection", (socket) => {
   });
 
   socket.on("close", () => {
+    const leaving = realNameMap.get(peerId);
     peers.delete(peerId);
-    broadcast({ type: "peer-left", peerId });
+    realNameMap.delete(peerId);
+    broadcast({ type: "peer-left", peerId, leaving });
   });
 });
 

@@ -31,19 +31,26 @@ function App() {
     setJoined(false);
     setMyId(null);
     setPeers([]);
+    setName("");
+    setPeerName([]);
   }
 
   return (
     <div className="container">
       <h1>Voice Chat</h1>
       {!joined ? (
-        <>
+        <div className="join-container">
           <div>Enter your real name pls:</div>
-          <input type="text" onChange={(e) => setName(e.target.value)}></input>
+          <input
+            className="namefield"
+            type="text"
+            onChange={(e) => setName(e.target.value)}
+          ></input>
+
           <button className="btn join" onClick={handleJoin}>
             Join Voice
           </button>
-        </>
+        </div>
       ) : (
         <div className="room">
           <div className="me">

@@ -63,6 +63,7 @@ export async function join(
       closePeer(msg.peerId, pcsRef);
       removeRemoteAudio(msg.peerId);
       setPeers((prev) => prev.filter((id) => id !== msg.peerId));
+      setPeerName((prev) => prev.filter((id) => id.realname != msg.leaving));
       return;
     }
 
