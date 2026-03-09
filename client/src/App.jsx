@@ -50,8 +50,6 @@ function App() {
             You: <span className="id">{myId}</span>
             <div>Real Name: {name}</div>
           </div>
-
-          <input type="text" onChagne={(e) => setName(e.target.value)}></input>
           <div className="peer-list">
             <h3>Peers ({peerName.length})</h3>
             {peerName.length === 0 ? (
@@ -60,7 +58,7 @@ function App() {
               <ul>
                 {peerName.map((item) => (
                   <li key={item.peerId} className="peer">
-                    {item.peerId} and {item.realname}
+                    {item.realname}
                   </li>
                 ))}
               </ul>

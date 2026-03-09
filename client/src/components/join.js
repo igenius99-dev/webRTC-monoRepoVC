@@ -49,8 +49,7 @@ export async function join(
     }
 
     if (msg.type === "setRealNameMap") {
-      const namePeers = JSON.parse(msg.namePeers);
-      setPeerName(namePeers);
+      setPeerName(msg.namePeers);
     }
 
     if (msg.type === "peer-joined") {

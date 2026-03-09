@@ -77,7 +77,21 @@ wss.on("connection", (socket) => {
       return;
     }
 
-    if (msg.type === "setName") realNameMap.set(peerId, msg.realName);
+    if (msg.type === "setName") {
+      realNameMap.set(peerId, msg.realName);
+      const filterPeers = [...peers.keys()]
+        .filter((k) => k !== peerId)
+        .map((item) => ({ peerId: item, realname: realNameMap.get(item) }));
+      send(socket, { type: "setRealNameMap", peerId, namePeers: filterPeers });
+      broadcast(
+        {
+          type: "setRealNameMap",
+          peerId,
+          namePeers: [{ peerId: peerId, realname: realNameMap.get(peerId) }],
+        },
+        peerId,
+      );
+    }
 
     if (msg.type === "signal") {
       const target = peers.get(msg.to);
