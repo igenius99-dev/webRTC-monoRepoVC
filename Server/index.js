@@ -40,6 +40,7 @@ const server = createServer((req, res) => {
 
 const wss = new WebSocketServer({ server, path: "/ws" });
 const peers = new Map();
+const realNameMap = new Map();
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -75,6 +76,8 @@ wss.on("connection", (socket) => {
     } catch {
       return;
     }
+
+    if (msg.type === "setName") realNameMap.set(peerId, msg.realName);
 
     if (msg.type === "signal") {
       const target = peers.get(msg.to);

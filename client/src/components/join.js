@@ -11,6 +11,8 @@ export async function join(
   setJoined,
   setMyId,
   setPeers,
+  name,
+  setPeerName,
 ) {
   localStreamRef.current = await navigator.mediaDevices.getUserMedia({
     audio: true,
@@ -33,6 +35,7 @@ export async function join(
     if (msg.type === "Welcome") {
       setMyId(msg.peerId);
       setPeers(msg.peers);
+      socket.send(JSON.stringify({ type: "setName", realName: name }));
 
       for (const peerId of msg.peers) {
         await startCall({
@@ -43,6 +46,11 @@ export async function join(
         });
       }
       return;
+    }
+
+    if (msg.type === "setRealNameMap") {
+      const namePeers = JSON.parse(msg.namePeers);
+      setPeerName(namePeers);
     }
 
     if (msg.type === "peer-joined") {
