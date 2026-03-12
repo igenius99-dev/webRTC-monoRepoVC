@@ -1,0 +1,9 @@
+services:
+  voicechat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voicechat
+    ports:
+      - "3000:3001"
+    restart: unless-stopped
