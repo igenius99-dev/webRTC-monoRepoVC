@@ -12,6 +12,7 @@ function App() {
   const [peers, setPeers] = useState([]);
   const [name, setName] = useState("");
   const [peerName, setPeerName] = useState([]);
+  const [adm, setAdm] = useState("");
 
   function handleJoin() {
     join(
@@ -35,8 +36,13 @@ function App() {
     setPeerName([]);
   }
 
+  function admin() {
+    const check = import.meta.env.VITE_ADMIN_CRED;
+  }
+
   return (
     <div className="container">
+      <div></div>
       <h1>Voice Chat</h1>
       {!joined ? (
         <div className="join-container">
