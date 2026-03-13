@@ -49,7 +49,11 @@ export async function join(
     }
 
     if (msg.type === "setRealNameMap") {
-      setPeerName(msg.namePeers);
+      setPeerName((prev) => {
+        const merged = new Map(prev.map((p) => [p.peerId, p]));
+        for (const np of msg.namePeers) merged.set(np.peerId, np);
+        return [...merged.values()];
+      });
     }
 
     if (msg.type === "peer-joined") {
