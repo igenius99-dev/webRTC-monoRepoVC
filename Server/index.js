@@ -8,6 +8,28 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const DIST = join(__dirname, "..", "client", "dist");
 const PORT = process.env.PORT || 3001;
 
+const METERED_DOMAIN = process.env.METERED_DOMAIN;
+const METERED_API_KEY = process.env.METERED_API_KEY;
+
+let cachedCreds = null;
+let cachedAt = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function getTurnCredentials() {
+  if (cachedCreds && Date.now() - cachedAt < CACHE_TTL) return cachedCreds;
+  const res = await fetch(
+    `https://${METERED_DOMAIN}/api/v1/turn/credentials?apiKey=${METERED_API_KEY}`,
+  );
+  if (!res.ok) {
+    console.error(`[turn] failed to fetch credentials: ${res.status}`);
+    return cachedCreds ?? [];
+  }
+  cachedCreds = await res.json();
+  cachedAt = Date.now();
+  console.log("[turn] refreshed TURN credentials");
+  return cachedCreds;
+}
+
 const MIME = {
   ".html": "text/html",
   ".js": "application/javascript",
@@ -57,14 +79,17 @@ function broadcast(message, exceptId = null) {
   }
 }
 
-wss.on("connection", (socket) => {
+wss.on("connection", async (socket) => {
   const peerId = uid();
   peers.set(peerId, socket);
+
+  const iceServers = await getTurnCredentials();
 
   send(socket, {
     type: "Welcome",
     peerId,
     peers: [...peers.keys()].filter((k) => k !== peerId),
+    iceServers,
   });
 
   broadcast({ type: "peer-joined", peerId }, peerId);

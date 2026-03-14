@@ -3,10 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        VITE_TURN_USERNAME: ${VITE_TURN_USERNAME}
-        VITE_TURN_CREDENTIAL: ${VITE_TURN_CREDENTIAL}
     container_name: voicechat
+    environment:
+      - METERED_DOMAIN=${METERED_DOMAIN}
+      - METERED_API_KEY=${METERED_API_KEY}
     expose:
       - "3001"
     restart: unless-stopped

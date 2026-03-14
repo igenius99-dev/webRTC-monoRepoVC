@@ -3,10 +3,6 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
 COPY client/ ./
-ARG VITE_TURN_USERNAME
-ARG VITE_TURN_CREDENTIAL
-ENV VITE_TURN_USERNAME=$VITE_TURN_USERNAME
-ENV VITE_TURN_CREDENTIAL=$VITE_TURN_CREDENTIAL
 RUN npm run build
 
 FROM node:20-alpine AS server-build

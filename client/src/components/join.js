@@ -24,6 +24,7 @@ export async function join(
   socket.onopen = () => setJoined(true);
 
   let queue = Promise.resolve();
+  let iceServers = [];
 
   socket.onmessage = (event) => {
     queue = queue.then(() => handleMessage(event));
@@ -33,6 +34,7 @@ export async function join(
     const msg = JSON.parse(event.data);
 
     if (msg.type === "Welcome") {
+      iceServers = msg.iceServers ?? [];
       setMyId(msg.peerId);
       setPeers(msg.peers);
       socket.send(JSON.stringify({ type: "setName", realName: name }));
@@ -43,6 +45,7 @@ export async function join(
           socket,
           localStream: localStreamRef.current,
           pcsRef,
+          iceServers,
         });
       }
       return;
@@ -78,6 +81,7 @@ export async function join(
         socket,
         localStream: localStreamRef.current,
         pcsRef,
+        iceServers,
       });
     }
   }

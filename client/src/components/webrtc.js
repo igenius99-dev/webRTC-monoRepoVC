@@ -14,35 +14,8 @@ function flushCandidates(peerId, pc) {
   pendingCandidates.delete(peerId);
 }
 
-const TURN_USER = import.meta.env.VITE_TURN_USERNAME;
-const TURN_PASS = import.meta.env.VITE_TURN_CREDENTIAL;
-
-const ICE_SERVERS = [
-  { urls: "stun:stun.relay.metered.ca:80" },
-  {
-    urls: "turn:global.relay.metered.ca:80",
-    username: TURN_USER,
-    credential: TURN_PASS,
-  },
-  {
-    urls: "turn:global.relay.metered.ca:80?transport=tcp",
-    username: TURN_USER,
-    credential: TURN_PASS,
-  },
-  {
-    urls: "turn:global.relay.metered.ca:443",
-    username: TURN_USER,
-    credential: TURN_PASS,
-  },
-  {
-    urls: "turns:global.relay.metered.ca:443?transport=tcp",
-    username: TURN_USER,
-    credential: TURN_PASS,
-  },
-];
-
-export function createPeer({ peerId, socket, localStream, pcsRef }) {
-  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+export function createPeer({ peerId, socket, localStream, pcsRef, iceServers }) {
+  const pc = new RTCPeerConnection({ iceServers });
 
   pc.onicecandidate = (e) => {
     if (!e.candidate) return;
@@ -71,9 +44,9 @@ export function createPeer({ peerId, socket, localStream, pcsRef }) {
   return pc;
 }
 
-export async function startCall({ peerId, socket, localStream, pcsRef }) {
+export async function startCall({ peerId, socket, localStream, pcsRef, iceServers }) {
   console.log(`[webrtc] starting call with ${peerId}`);
-  const pc = createPeer({ peerId, socket, localStream, pcsRef });
+  const pc = createPeer({ peerId, socket, localStream, pcsRef, iceServers });
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   socket.send(
@@ -91,10 +64,11 @@ export async function handleSignal({
   socket,
   localStream,
   pcsRef,
+  iceServers,
 }) {
   if (data.kind === "offer") {
     console.log(`[webrtc] got offer from ${from}`);
-    const pc = createPeer({ peerId: from, socket, localStream, pcsRef });
+    const pc = createPeer({ peerId: from, socket, localStream, pcsRef, iceServers });
     await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
     flushCandidates(from, pc);
     const answer = await pc.createAnswer();
